@@ -1,0 +1,65 @@
+\documentclass[sigconf]{acmart}
+
+\usepackage{url}
+
+\begin{document}
+
+\title{Reproduce Stock Price Prediction Tasks with News Analysis}
+\subtitle{NYU FRE-7871 Final Project Proposal}
+
+\author{Pei-Lun Liao}
+\affiliation{%
+  \institution{New York University}
+}
+\email{pll273@nyu.edu}
+
+\begin{abstract}
+In this project, selected related works will be reproduced with different financial news dataset. The goal is to understand techniques and challenges in stock price prediction.
+\end{abstract}
+\maketitle
+
+\section{Introduction}
+Nowadays, traders apply machine learning technique to extract information from financial news data. The information can be used to boost the accuracy of stock price
+prediction \cite{AZFinText, Ding2014, Ding2015}. The project aims to reproduce selected related works \cite{AZFinText}. Hence, people can learn the challenge and technique
+that are crucial in stock price prediction.
+
+\section{Approaches}
+\subsection{Data}
+Data quality is crucial to make the accurate prediction \cite{stanford}. Unfortunately, it is not easy to find a publicly available financial news dataset. For example, the public financial
+news dataset published in \cite{Ding2014} was currently unavailable due to license issue \cite{fn}. Another corpus available online requires membership and subscription fee \cite{nyt}.
+Also, it is not practical to crawl dataset from business news media in this one month project. Most of the time will be spent on data collecting, cleaning, and processing instead of
+understanding the technique that works for stock price prediction.
+
+Fortunately, an available financial news dataset was found on Webhose.io \cite{data}. The data was crawled from the Internet from July to October in 2015. 47,851 news articles were collected
+in machine-readable format. However, there is no paper shows the dataset could help stock price prediction.
+
+\subsection{Plan}
+\subsubsection{Stage 1: bag-of-words}
+	The goal in stage 1 is reproducing the experiment result in AZFinText system \cite{AZFinText}. AZFinText represented article in the bag-of-words with only proper nouns. The
+	dataset were Yahoo Finance news articles and the S \& P 500 index. Reproducing the experiment in AZFinText can prove that the data from Webhose.io also works for stock
+	price prediction. Moreover, we examined whether only using proper nouns helps the performance.
+
+	The experiment setup will follow the AZFinText paper. We will represent articles in the bag-of-words and use SVR to predict stock price. Finally, we evaluate the result by the rate of return.
+	The strategy is buying the stock as the predicted price is greater than or equal to 1\% movement from the stock price at the time the article was released. Then, sell the stock after 20 minutes.
+	In stage 1, we will have four different results to compare.
+	\\
+	\begin{itemize}
+		\item 1. Stock price
+		\item 2. Stock price + News in bag-of-words
+		\item 3. Stock price + News in bag-of-words without stopwords
+		\item 4. Stock price + News in bag-of-words with only proper nouns
+	\end{itemize}
+	The expected performance will be 4 > 3 > 2 > 1 as the paper described.
+
+\subsubsection{Stage 2: word and sentence representation}
+	In this stage, We are curious how modern deep learning techniques like word2vec, seq2seq, and CNN-LSTM language models could help improve the performance.  
+	\begin{itemize}
+		\item 5. Stock price + News feature in average word2vec \cite{word2vec1, word2vec2}
+		\item 6. Stock price + News feature in Skip-Thought vector\cite{skip}
+		\item 7. Stock price + News feature in CNN-LSTM encoding \cite{CNN2RNN} (may try to find pre-trained model)
+	\end{itemize}
+	The performance in stage 2 should be better than the one in stage 1.
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{citation} 
+\end{document}
