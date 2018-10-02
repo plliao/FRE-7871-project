@@ -118,7 +118,8 @@ def crawl_reuters(dir_path):
 
         date = date + one_day
 
-def main():
+
+def crawl_IEX():
     snp = pd.read_csv('data/constituents.csv')
     for ticker in snp['Symbol']:
         time.sleep(1)
@@ -131,7 +132,10 @@ def main():
 
         crawl_IEX_news(ticker, dir_path)
         crawl_IEX_price(ticker, dir_path)
-        crawl_reuters("data/reuters")
+
+def main():
+    #crawl_IEX()
+    #crawl_reuters("data/reuters")
 
 
 if __name__ == '__main__':

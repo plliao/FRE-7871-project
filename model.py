@@ -66,7 +66,7 @@ def evaluate_return(open_price, y_hat, y):
     revenue = 0
     index = 1
     for price, predict, actual in zip(open_price, y_hat, y):
-        if predict >= 0.0001 * price:
+        if predict >= 0.0 * price:
             invest_times += 1
             print("Trade on {0:d}: ".format(index), price, predict, actual)
             revenue += (invest_amount * actual / price)
@@ -107,101 +107,77 @@ def run(news_df, snp_df, price_index, split):
     data = news_df.groupby('date').sum().join(snp_df.set_index('Date')).dropna()
     X_temp = data.values
     y = generate_regression_label(data)
+    y_cls = generate_classification_label(data)
 
     tscv = TimeSeriesSplit(n_splits=split)
     for train_index, test_index in tscv.split(X_temp):
-        print("index: ", train_index, test_index)
         start_date = data.index[train_index[0]]
         split_date = data.index[test_index[0]]
         end_date = data.index[test_index[-1]]
 
-        bag_of_words, vectorizer = get_bow(news_df, start_date, split_date, end_date)
+        print(start_date, split_date, end_date)
 
+        bag_of_words, vectorizer = get_bow(news_df, start_date, split_date, end_date)
         X = data[['Open']].join(bag_of_words, how='inner').drop('Open', axis=1).values
 
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
+        y_cls_train, y_cls_test = y_cls[train_index], y_cls[test_index]
 
         X_price = data['Open'].values
         X_train_price = X_price[train_index]
         X_test_price = X_price[test_index]
 
+
+        # Normalization and Scaling
         scaler = StandardScaler()
         scaler.fit(X_train_price.reshape(-1, 1))
         x_train_price_t = scaler.transform(X_train_price.reshape(-1, 1))
         x_test_price_t = scaler.transform(X_test_price.reshape(-1, 1))
         y_train_t = scaler.transform(y_train.reshape(-1, 1)).reshape(-1, )
-        '''
-        y_scaler = StandardScaler()
-        y_scaler.fit(y_train.reshape(-1, 1))
-        '''
 
-        #train_open_price = X_train[:, price_index]
-        #test_open_price = X_test[:, price_index]
-
-        #x_train_t = x_scaler.transform(X_train)
-        #x_test_t = x_scaler.transform(X_test)
-        x_train_t = np.concatenate((normalize(X_train), x_train_price_t), axis=1)
-        x_test_t = np.concatenate((normalize(X_test), x_test_price_t), axis=1)
+        x_text_train_t = normalize(X_train)
+        x_text_test_t = normalize(X_test)
+        x_train_t = np.concatenate((x_text_train_t, x_train_price_t), axis=1)
+        x_test_t = np.concatenate((x_text_test_t, x_test_price_t), axis=1)
 
 
+        # Modeling
+        cls_clf = LogisticRegression(penalty='l2', C=0.0005, verbose=1, max_iter=100)
+        cls_clf.fit(x_text_train_t, y_cls_train)
+        y_train_cls_clf = cls_clf.predict(x_text_train_t)
+        y_test_cls_clf = cls_clf.predict(x_text_test_t)
 
-        #ipdb.set_trace()
-        #y_train_t = y_scaler.transform(y_train.reshape(-1, 1)).reshape(-1, )
-
-        #clf = LogisticRegression(penalty='l2', C=0.00005, verbose=1, max_iter=100)
         clf = SVR(kernel='linear', C=0.0005, verbose=1)
         clf.fit(x_train_t, y_train_t)
         y_train_clf = clf.predict(x_train_t)
         y_test_clf = clf.predict(x_test_t)
         y_train_hat = scaler.inverse_transform(y_train_clf)
         y_test_hat = scaler.inverse_transform(y_test_clf)
-        '''
-        bayes = MultinomialNB()
-        bayes.fit(X_train, y_train)
 
-        y_train_bay = bayes.predict(X_train)
-        y_test_bay = bayes.predict(X_test)
-        '''
+        # Evaluation
+        train_acc = accuracy_score(y_cls_train, y_train_cls_clf)
+        test_acc = accuracy_score(y_cls_test, y_test_cls_clf)
+        print("Accuracy ", train_acc, test_acc)
 
         train_mse = mean_squared_error(y_train, y_train_hat)
         test_mas = mean_squared_error(y_test, y_test_hat)
-        print(train_mse, test_mas)
+        print("MSE", train_mse, test_mas)
+
         train_return = evaluate_return(X_train_price, y_train_hat, y_train)
         test_return = evaluate_return(X_test_price, y_test_hat, y_test)
-        print(train_return, test_return)
+        print("Return", train_return, test_return)
 
-        '''
-        train_acc = accuracy_score(y_train, y_train_clf)
-        test_acc = accuracy_score(y_test, y_test_clf)
-        train_result_list.append(train_acc)
-        test_result_list.append(test_acc)
-        '''
 
-        '''
-        train_acc_bay = accuracy_score(y_train, y_train_bay)
-        test_acc_bay = accuracy_score(y_test, y_test_bay)
-        train_result_list_bay.append(train_acc_bay)
-        test_result_list_bay.append(test_acc_bay)
-        '''
-
-        #print(train_return, test_return)
-        #print(train_acc, test_acc)
-        #print('\t', train_acc_bay, test_acc_bay)
-
+        # Words analysis
         important_terms, not_important_terms = analysis(x_train_t.shape[1], clf)
-        print("Important terms: ", vectorizer.inverse_transform(important_terms[:-1].reshape(1, -1))[0])
-        print("Not important terms: ", vectorizer.inverse_transform(not_important_terms[:-1].reshape(1, -1))[0])
+        print("Positive terms: ", vectorizer.inverse_transform(important_terms[:-1].reshape(1, -1))[0])
+        print("Negative terms: ", vectorizer.inverse_transform(not_important_terms[:-1].reshape(1, -1))[0])
 
-        #A = analysis_bay(X_train, y_train)
-        #show_terms(['pos', 'neg'], vectorizer, A[0], A[1])
+        print("Bayes analysis")
+        bayes_result = analysis_bay(X_train, y_cls_train)
+        show_terms(['negative', 'positive'], vectorizer, bayes_result[0], bayes_result[1])
 
-    #print(np.average(train_result_list), np.average(test_result_list))
-    #print('\t', np.average(train_result_list_bay), np.average(test_result_list_bay))
-    #print(np.average(test_return_list))
-
-    #clf = LogisticRegression(penalty='l2', C=0.005, verbose=1, max_iter=100)
-    #clf.fit(X, y)
 
 def analysis_bay(X, y):
     clf = MultinomialNB()
@@ -226,8 +202,8 @@ def show_terms(class_labels, vectorizer, important_terms, not_important_terms):
 def analysis(feature_size, clf):
     important_terms = np.zeros(feature_size, np.int64)
     not_important_terms = np.zeros(feature_size, np.int64)
-    maximum_weight_index = clf.coef_.argsort()[0][-20:][::-1]
-    minimum_weight_index = clf.coef_.argsort()[0][:20]
+    maximum_weight_index = clf.coef_.argsort()[0][-10:][::-1]
+    minimum_weight_index = clf.coef_.argsort()[0][:10]
     print(clf.coef_[0][maximum_weight_index])
     print(clf.coef_[0][minimum_weight_index])
     important_terms[maximum_weight_index] = 1
