@@ -1,0 +1,344 @@
+Price feature
+2015-07-09 2015-07-31 2015-08-17
+Accuracy  0.5 0.666666666667
+MSE 118.138468435 222.997188313
+Return 0.172507202451 -0.0183551039891
+
+
+2015-07-09 2015-08-18 2015-09-03
+Accuracy  0.678571428571 0.833333333333
+MSE 143.676367343 1157.61342834
+Return 0.0960349159894 0.706871658436
+
+
+2015-07-09 2015-09-04 2015-09-22
+Accuracy  0.75 0.416666666667
+MSE 376.359900509 534.570019653
+Return 0.46375172949 -0.18054112894
+
+
+2015-07-09 2015-09-23 2015-10-08
+Accuracy  0.692307692308 0.416666666667
+MSE 393.359278364 645.998154869
+Return 0.352980762575 0.113149977343
+
+
+2015-07-09 2015-10-09 2015-10-26
+Accuracy  0.640625 0.75
+MSE 429.914387275 151.922342098
+Return 0.302820098568 0.449399568328
+
+
+With stopwords
+2015-07-09 2015-07-31 2015-08-17
+word size 680
+Accuracy  0.5 0.583333333333
+MSE 1.93049747984e-27 264.998722857
+Return 0.575068964648 -0.112295933196
+LR analysis
+	 [ 0.00065463  0.0002483   0.00015656  0.00015119  0.00014448  0.00013916
+  0.00012669  0.00010932  0.0001039   0.00010335]
+	 [ -9.57966357e-04  -6.45826830e-04  -1.10671368e-04  -9.12425302e-05
+  -7.52188245e-05  -6.32570586e-05  -6.17910652e-05  -6.09783893e-05
+  -5.83338074e-05  -5.15080162e-05]
+	Positive terms:  ['be' 'has' 'if' 'its' 'they' 'this' 'we' 'will']
+	Negative terms:  ['after' 'data' 'funds' 'june' 'oil' 'percent' 'points' 'was']
+Linear analysis
+	 [ 0.57833246  0.4823414   0.4520437   0.43608651  0.42050922  0.41456398
+  0.36607445  0.35385066  0.28503039  0.26776801]
+	 [-0.61974087 -0.4915365  -0.46756846 -0.45367022 -0.411229   -0.38286328
+ -0.32825611 -0.30151221 -0.28944824 -0.27190651]
+	Positive terms:  ['be' 'euro' 'greece' 'greek' 'if' 'may' 'news' 'they' 'we']
+	Negative terms:  ['after' 'capital' 'data' 'million' 'oil' 'or' 'percent' 'trading' 'was']
+
+Bayes analysis
+	class:  negative
+	Important terms:  ['are' 'its' 'percent' 'said' 'was']
+	Not important terms:  ['course' 'doesn' 'fact' 'remains' 'south']
+	class:  positive
+	Important terms:  ['are' 'has' 'its' 'said' 'this']
+	Not important terms:  ['democratic' 'department' 'edt' 'north' 'released']
+
+
+2015-07-09 2015-08-18 2015-09-03
+word size 1207
+Accuracy  0.714285714286 0.833333333333
+MSE 1.72528458182e-27 1232.60503567
+Return 0.554204454761 1.98208506163
+LR analysis
+	 [  9.85713465e-04   6.19055745e-04   5.30005816e-04   1.43415849e-04
+   1.41623360e-04   1.12697478e-04   1.04678559e-04   1.00860047e-04
+   9.51337380e-05   8.93386561e-05]
+	 [ -2.12926326e-03  -1.26255084e-03  -2.22079442e-04  -1.94043982e-04
+  -1.60624315e-04  -1.48542448e-04  -9.81251912e-05  -9.69578659e-05
+  -9.30085012e-05  -9.11261528e-05]
+	Positive terms:  ['billion' 'euro' 'government' 'our' 'shares' 'technology' 'them']
+	Negative terms:  ['aug' 'data' 'dollar' 'inc' 'oil' 'percent' 'production' 'since']
+Linear analysis
+	 [ 0.71398734  0.70187064  0.68878091  0.62058977  0.58529823  0.57706702
+  0.56439908  0.54957819  0.54143992  0.54098873]
+	 [-0.82218018 -0.77388127 -0.70828853 -0.68544631 -0.6781361  -0.56263168
+ -0.54789809 -0.53467049 -0.50132853 -0.48432384]
+	Positive terms:  ['billion' 'euro' 'greece' 'impact' 'may' 'our' 'quarter' 'shares' 'strong'
+ 'tax']
+	Negative terms:  ['aug' 'australia' 'care' 'data' 'fell' 'oil' 'percent' 'reuters' 'trust'
+ 'uk']
+
+Bayes analysis
+	class:  negative
+	Important terms:  ['data' 'news' 'oil' 'percent' 'you']
+	Not important terms:  ['housing' 'planning' 'sent' 'sunday' 'weekend']
+	class:  positive
+	Important terms:  ['billion' 'if' 'million' 'percent' 'you']
+	Not important terms:  ['children' 'concerns' 'happen' 'october' 'sat']
+
+
+2015-07-09 2015-09-04 2015-09-22
+word size 1583
+Accuracy  0.75 0.416666666667
+MSE 3.73212066412e-27 461.928999058
+Return 0.817580637513 0.308046260776
+LR analysis
+	 [ 0.0024189   0.00185405  0.00014669  0.00013491  0.00013403  0.00012884
+  0.00012163  0.00011981  0.00010505  0.00010002]
+	 [-0.00444232 -0.0028367  -0.00057268 -0.00033247 -0.00025139 -0.0002024
+ -0.00016738 -0.00015325 -0.00015035 -0.00014954]
+	Positive terms:  ['billion' 'equity' 'government' 'group' 'lse' 'our' 'technology' 'them']
+	Negative terms:  ['aug' 'cents' 'data' 'dollar' 'oil' 'reuters' 'short']
+Linear analysis
+	 [ 1.50764223  1.47342552  0.64250436  0.63599728  0.62572034  0.61453083
+  0.59863491  0.58632487  0.56168503  0.55690495]
+	 [-0.99816287 -0.69626932 -0.6736489  -0.66242001 -0.65813268 -0.65018451
+ -0.61520794 -0.59412293 -0.58883902 -0.58721477]
+	Positive terms:  ['group' 'lse' 'otc' 'quarter' 'region' 'second' 'sept' 'services' 'shares'
+ 'still']
+	Negative terms:  ['against' 'bonds' 'care' 'dollar' 'ecb' 'funds' 'pc' 'per' 'raise' 'rates']
+
+Bayes analysis
+	class:  negative
+	Important terms:  ['bank' 'data' 'million' 'oil' 'per']
+	Not important terms:  ['evidence' 'sees' 'serious' 'sort' 'valley']
+	class:  positive
+	Important terms:  ['bank' 'billion' 'group' 'growth' 'million']
+	Not important terms:  ['chain' 'children' 'october' 'practice' 'sat']
+
+
+2015-07-09 2015-09-23 2015-10-08
+word size 1852
+Accuracy  0.711538461538 0.416666666667
+MSE 5.40978622088e-27 821.025460174
+Return 0.844985072529 0.113149977343
+LR analysis
+	 [ 0.00238987  0.00093897  0.00022211  0.00016906  0.00016577  0.00014574
+  0.00014543  0.00014177  0.00013956  0.00012476]
+	 [-0.00429678 -0.00250895 -0.00070867 -0.00031442 -0.00021305 -0.00017488
+ -0.00017401 -0.0001738  -0.0001522  -0.00014949]
+	Positive terms:  ['equity' 'group' 'half' 'index' 'lse' 'report' 'shares' 'technology']
+	Negative terms:  ['customers' 'debt' 'dollar' 'oil' 'rates' 'short' 'three']
+Linear analysis
+	 [ 1.31092902  1.3033758   0.75459602  0.70694073  0.6850339   0.63623113
+  0.63119061  0.62979319  0.62279866  0.60018041]
+	 [-1.15883645 -1.08418265 -0.90749106 -0.72522041 -0.70905681 -0.69582699
+ -0.69345582 -0.69114642 -0.66457175 -0.62794613]
+	Positive terms:  ['group' 'half' 'index' 'lse' 'otc' 'power' 'services' 'shares' 'still'
+ 'tax']
+	Negative terms:  ['against' 'care' 'court' 'debt' 'dollar' 'ecb' 'fed' 'pc' 'raise' 'rates']
+
+Bayes analysis
+	class:  negative
+	Important terms:  ['debt' 'oil' 'per' 'prices' 'rate']
+	Not important terms:  ['basic' 'prompted' 'southern' 'television' 'valley']
+	class:  positive
+	Important terms:  ['group' 'oil' 'prices' 'shares' 'stock']
+	Not important terms:  ['computer' 'happened' 'org' 'practice' 'residents']
+
+
+2015-07-09 2015-10-09 2015-10-26
+word size 2188
+Accuracy  0.65625 0.75
+MSE 2.0268386779e-26 125.86446252
+Return 0.877170503648 0.453442116539
+LR analysis
+	 [ 0.00210238  0.00122719  0.00025084  0.00018771  0.00016409  0.00015117
+  0.00014156  0.00013857  0.00013129  0.00012384]
+	 [-0.0043456  -0.00157921 -0.00065867 -0.00037921 -0.00025192 -0.00019638
+ -0.00016166 -0.00016107 -0.00014688 -0.00014612]
+	Positive terms:  ['cloud' 'equity' 'half' 'income' 'index' 'lse' 'otc' 'technology']
+	Negative terms:  ['cents' 'customers' 'dollar' 'japan' 'oil' 'quotes' 'short']
+Linear analysis
+	 [ 1.4724154   0.95262625  0.84599135  0.81383161  0.78240977  0.76464661
+  0.75936215  0.73796378  0.72588856  0.66547684]
+	 [-1.01037579 -0.92488147 -0.84012569 -0.74349485 -0.74348738 -0.70591281
+ -0.70548115 -0.69588695 -0.69417905 -0.68637509]
+	Positive terms:  ['credit' 'deadline' 'half' 'index' 'lse' 'oct' 'otc' 'quarter' 'region'
+ 'tax']
+	Negative terms:  ['against' 'care' 'court' 'customers' 'dollar' 'ecb' 'japanese' 'leave'
+ 'raise' 'rates']
+
+Bayes analysis
+	class:  negative
+	Important terms:  ['debt' 'oil' 'per' 'rate' 'your']
+	Not important terms:  ['austerity' 'basic' 'gov' 'police' 'sort']
+	class:  positive
+	Important terms:  ['information' 'oil' 'per' 'technology' 'your']
+	Not important terms:  ['computer' 'meaning' 'requests' 'residents' 'sat']
+
+
+Without stopwords
+2015-07-09 2015-07-31 2015-08-17
+word size 520
+Accuracy  0.5 0.666666666667
+MSE 3.48295956351e-27 300.707943532
+Return 0.575068964648 -0.128509677048
+LR analysis
+	 [ 0.00065465  0.00024832  0.00018422  0.0001426   0.00013602  0.00013241
+  0.00011864  0.00011119  0.00010564  0.0001037 ]
+	 [ -9.57973904e-04  -6.45838753e-04  -1.40854891e-04  -1.01391573e-04
+  -9.91686911e-05  -7.96150832e-05  -7.82394413e-05  -6.92849077e-05
+  -6.58851281e-05  -5.81225466e-05]
+	Positive terms:  ['billion' 'companies' 'government' 'greece' 'mr' 'news' 'said'
+ 'technology']
+	Negative terms:  ['data' 'funds' 'july' 'june' 'nasdaq' 'oil' 'percent' 'points']
+Linear analysis
+	 [ 0.4628337   0.4205757   0.41657112  0.39743525  0.38897255  0.34179669
+  0.2950951   0.29133983  0.27840368  0.27465659]
+	 [-0.56708243 -0.50328229 -0.50200905 -0.44374386 -0.28336143 -0.27920475
+ -0.25454656 -0.24349462 -0.23707197 -0.23351575]
+	Positive terms:  ['energy' 'euro' 'gas' 'greece' 'insurance' 'news' 'power' 'said' 'share']
+	Negative terms:  ['capital' 'data' 'funds' 'million' 'nasdaq' 'oil' 'percent' 'points'
+ 'trading']
+
+Bayes analysis
+	class:  negative
+	Important terms:  ['data' 'oil' 'percent' 'said' 'year']
+	Not important terms:  ['doesn' 'huge' 'quickly' 'remains' 'south']
+	class:  positive
+	Important terms:  ['billion' 'companies' 'percent' 'said' 'year']
+	Not important terms:  ['democratic' 'department' 'edt' 'north' 'released']
+
+
+2015-07-09 2015-08-18 2015-09-03
+word size 1043
+Accuracy  0.75 0.833333333333
+MSE 1.90477200818e-27 1167.40738817
+Return 0.554204454761 0.625012951088
+LR analysis
+	 [ 0.0009857   0.00061906  0.00053     0.00016936  0.00012704  0.00011774
+  0.00011207  0.00010844  0.00010513  0.00010346]
+	 [ -2.12924795e-03  -1.26257449e-03  -2.56961013e-04  -2.15205085e-04
+  -1.76463505e-04  -1.66561897e-04  -1.07776521e-04  -1.05613276e-04
+  -9.99450030e-05  -9.18178161e-05]
+	Positive terms:  ['billion' 'euro' 'government' 'mr' 'says' 'shares' 'technology']
+	Negative terms:  ['aug' 'crude' 'data' 'dollar' 'july' 'oil' 'percent' 'production']
+Linear analysis
+	 [ 0.77075467  0.74113121  0.73685455  0.7255694   0.64785868  0.56182487
+  0.53954004  0.53181317  0.50578955  0.47717496]
+	 [-0.87159603 -0.83792024 -0.79474464 -0.77027088 -0.72498546 -0.58397604
+ -0.58022238 -0.57507601 -0.54763779 -0.49634137]
+	Positive terms:  ['billion' 'britain' 'euro' 'greece' 'half' 'impact' 'quarter' 'shares'
+ 'strong' 'tax']
+	Negative terms:  ['aug' 'australia' 'care' 'data' 'fell' 'loans' 'oil' 'percent' 'trust'
+ 'uk']
+
+Bayes analysis
+	class:  negative
+	Important terms:  ['data' 'market' 'news' 'oil' 'percent']
+	Not important terms:  ['planning' 'ready' 'safety' 'sunday' 'weekend']
+	class:  positive
+	Important terms:  ['bank' 'billion' 'million' 'news' 'percent']
+	Not important terms:  ['children' 'concerns' 'october' 'possible' 'practice']
+
+
+2015-07-09 2015-09-04 2015-09-22
+word size 1427
+Accuracy  0.75 0.416666666667
+MSE 6.75452289334e-27 484.199619316
+Return 0.817580637513 0.308046260776
+LR analysis
+	 [  2.41887296e-03   1.85402748e-03   1.60362665e-04   1.41585085e-04
+   1.39552802e-04   1.38278979e-04   1.35211686e-04   1.14606843e-04
+   1.01960862e-04   9.52711215e-05]
+	 [-0.0044423  -0.0028367  -0.00057269 -0.00036257 -0.00026696 -0.00022166
+ -0.00018071 -0.00016676 -0.00016581 -0.00016482]
+	Positive terms:  ['billion' 'claims' 'equity' 'government' 'group' 'lse' 'profits'
+ 'technology']
+	Negative terms:  ['aug' 'cents' 'data' 'dollar' 'oil' 'reuters' 'short']
+Linear analysis
+	 [ 1.56774305  1.53076603  0.69670179  0.66950816  0.66193479  0.64887769
+  0.56168273  0.55973415  0.55032109  0.54206622]
+	 [-1.10899721 -0.7238511  -0.70976384 -0.68087732 -0.65237891 -0.63334905
+ -0.62614443 -0.62433034 -0.6203188  -0.61738178]
+	Positive terms:  ['group' 'homes' 'lse' 'otc' 'power' 'quarter' 'region' 'second' 'sept'
+ 'services']
+	Negative terms:  ['bonds' 'care' 'cent' 'data' 'dollar' 'funds' 'pc' 'raise' 'rates' 'uk']
+
+Bayes analysis
+	class:  negative
+	Important terms:  ['bank' 'billion' 'data' 'million' 'oil']
+	Not important terms:  ['faces' 'fight' 'police' 'valley' 'wealth']
+	class:  positive
+	Important terms:  ['bank' 'billion' 'group' 'growth' 'million']
+	Not important terms:  ['chain' 'children' 'october' 'practice' 'sat']
+
+
+2015-07-09 2015-09-23 2015-10-08
+word size 1700
+Accuracy  0.711538461538 0.416666666667
+MSE 1.30669084493e-26 815.810997414
+Return 0.844985072529 0.0631142822188
+LR analysis
+	 [ 0.00238986  0.00093894  0.00023275  0.00018078  0.00017839  0.00015309
+  0.00015203  0.00015041  0.00014825  0.00014424]
+	 [-0.00429677 -0.00250891 -0.00070868 -0.00034503 -0.0002306  -0.0001855
+ -0.00018225 -0.00017964 -0.00016294 -0.00016286]
+	Positive terms:  ['equity' 'half' 'income' 'index' 'lse' 'report' 'shares' 'technology']
+	Negative terms:  ['cents' 'customers' 'debt' 'dollar' 'oil' 'rates' 'short']
+Linear analysis
+	 [ 1.35521287  1.32629705  0.74388169  0.74200564  0.69477302  0.68412379
+  0.65796446  0.62039512  0.61762638  0.60746923]
+	 [-1.25516961 -1.15411474 -0.96035504 -0.73716395 -0.72809596 -0.72456468
+ -0.72351579 -0.66912523 -0.65418282 -0.61188481]
+	Positive terms:  ['group' 'half' 'index' 'lse' 'otc' 'power' 'region' 'services' 'shares'
+ 'tax']
+	Negative terms:  ['care' 'court' 'debt' 'dollar' 'ecb' 'fed' 'leave' 'pc' 'raise' 'rates']
+
+Bayes analysis
+	class:  negative
+	Important terms:  ['debt' 'oil' 'price' 'prices' 'rate']
+	Not important terms:  ['police' 'prompted' 'southern' 'television' 'votes']
+	class:  positive
+	Important terms:  ['group' 'oil' 'prices' 'shares' 'stock']
+	Not important terms:  ['children' 'magazine' 'practice' 'receiving' 'sensitive']
+
+
+2015-07-09 2015-10-09 2015-10-26
+word size 2055
+Accuracy  0.65625 0.75
+MSE 5.33125854592e-27 125.7432549
+Return 0.877170503648 0.453442116539
+LR analysis
+	 [ 0.00210237  0.00122717  0.00026391  0.00019869  0.00017332  0.00015972
+  0.00015864  0.00014401  0.0001361   0.00013032]
+	 [-0.00434559 -0.00157918 -0.00065868 -0.00040718 -0.00026553 -0.00020864
+ -0.00017373 -0.00016951 -0.00015625 -0.00015523]
+	Positive terms:  ['cloud' 'equity' 'half' 'income' 'index' 'lse' 'otc' 'technology']
+	Negative terms:  ['cents' 'crude' 'customers' 'dollar' 'oil' 'quotes' 'short']
+Linear analysis
+	 [ 1.52648798  0.98926355  0.85936312  0.8270903   0.81798081  0.79027995
+  0.77447296  0.75620728  0.73539086  0.6656592 ]
+	 [-1.02482605 -1.01023467 -0.88388146 -0.76031033 -0.75997166 -0.75586372
+ -0.70861914 -0.7016929  -0.6790509  -0.66562305]
+	Positive terms:  ['credit' 'deadline' 'half' 'index' 'lse' 'oct' 'otc' 'quarter' 'region'
+ 'tax']
+	Negative terms:  ['care' 'court' 'customers' 'dollar' 'ecb' 'japanese' 'leave' 'raise'
+ 'rates' 'sales']
+
+Bayes analysis
+	class:  negative
+	Important terms:  ['china' 'debt' 'dollar' 'oil' 'rate']
+	Not important terms:  ['austerity' 'basic' 'chancellor' 'police' 'sees']
+	class:  positive
+	Important terms:  ['information' 'lse' 'oil' 'rate' 'technology']
+	Not important terms:  ['computer' 'meaning' 'possibly' 'residents' 'sat']
+
+

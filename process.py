@@ -61,7 +61,7 @@ def read_SNP_dataframe():
     snp = pd.read_csv("data/GSPC.csv")
     snp['target'] = pd.Series('2015-06-30').append(snp['Date'][0:-1], ignore_index=True)
     for offset in range(1, 6):
-        name = 'previous_close_{0:d}'.format(offset)
-        snp[name] = pd.Series([None for _ in range(offset)]).append(snp['Close'][0:-offset], ignore_index=True)
+        name = 'previous_price_{0:d}'.format(offset)
+        snp[name] = pd.Series([None for _ in range(offset)]).append(snp['Close'][0:-offset] - snp['Open'][0:-offset], ignore_index=True)
     return snp
 
