@@ -8,6 +8,8 @@ import datetime
 import ipdb
 import pandas as pd
 
+from reuter_data import logging
+
 NEWS_MONTH = ['07', '08', '09', '10']
 NEWS_NUMBER = [14793, 11978, 11337, 9743]
 
@@ -16,6 +18,28 @@ def clean_sentence(s):
     s = re.sub("[" + string.punctuation + "]", " ", s)
     s = re.sub(" +", " ", s)
     return s.strip()
+
+def collect_webhose_news():
+    df = pd.DataFrame()
+    for i, month in enumerate(NEWS_MONTH):
+        for index in range(1, NEWS_NUMBER[i] + 1):
+            logging('{0:s}: {1:05d}/{2:05d}'.format(month, index, NEWS_NUMBER[i]))
+            news_path = "data/{0:s}/news_{1:07d}.json".format(month, index)
+            with open(news_path) as f:
+                datum_json = json.load(f)
+
+            datum = pd.Series(
+                data={
+                    'text':datum_json['text'],
+                    'published_time':datum_json['published'],
+                    'country':datum_json['thread']['country'],
+                    'title':datum_json['thread']['title'],
+                    'site':datum_json['thread']['site']
+                }
+            )
+            df = df.append(datum, ignore_index=True)
+    df.to_csv('webhose_data.csv', index=False)
+    ipdb.set_trace()
 
 def read_news_dataframe(news_per_day):
     df = pd.DataFrame()
@@ -125,4 +149,4 @@ def read_reuter_csv():
 
 
 if __name__ == '__main__':
-    read_reuter_csv()
+    collect_webhose_news()
