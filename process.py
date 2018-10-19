@@ -104,7 +104,7 @@ def find_price(ticker, timestamp):
     offset = int((timestamp - start_time).total_seconds() // 60)
     return data[offset]
 
-def read_reuter_csv():
+def generate_reuter_price():
     reuter = pd.read_csv('reuter_data.csv')
     reuter['published_time'] = pd.to_datetime(reuter['published_time'])
     reuter.sort_values('published_time', inplace=True)
@@ -134,7 +134,7 @@ def read_reuter_csv():
             datum = pd.Series(
                 data={
                     'text':clean_sentence(article['text']),
-                    'publish_time':published_time,
+                    'published_time':published_time,
                     'predicted_time':predicted_time,
                     'price':price['high'],
                     'predicted_price':price['low'],
@@ -147,6 +147,109 @@ def read_reuter_csv():
     df.to_csv('reuter_price.csv', index=False)
     ipdb.set_trace()
 
+def find_day_price(ticker, timestamp):
+    date_str = timestamp.strftime('%Y-%m-%d')
+    path = 'data/price_5y/{0:s}.json'.format(ticker)
+
+    if not os.path.exists(path):
+        return None
+
+    with open(path, 'rb') as f:
+        data = pickle.load(f)
+
+    start_time = datetime.datetime.strptime('2015-06-30', '%Y-%m-%d')
+    target_time = datetime.datetime.strptime(date_str, '%Y-%m-%d')
+    offset = int((target_time - start_time).days)
+
+    if offset > len(data):
+        offset = len(data) - 1
+    elif offset < 0:
+        offset = 0
+
+    lower = False
+    higher = False
+    while offset >= 0 and offset < len(data) and (not lower or not higher):
+        guess_time = datetime.datetime.strptime(data[offset]['date'], '%Y-%m-%d')
+        if guess_time == target_time:
+            return data[offset]
+        elif guess_time > target_time:
+            #print('guess: {0:s}, target: {1:s}'.format(str(guess_time), str(target_time)))
+            offset -= 1
+            higher = True
+        else:
+            #print('guess: {0:s}, target: {1:s}'.format(str(guess_time), str(target_time)))
+            offset += 1
+            lower = True
+
+    return None
+
+
+def generate_webhose_price_trend():
+    webhose = pd.read_csv('webhose_label.csv')
+    webhose['published_time'] = pd.to_datetime(webhose['published_time'])
+    webhose.sort_values('published_time', inplace=True)
+
+    one_day = datetime.timedelta(days=1)
+
+    df = pd.DataFrame()
+    size = len(webhose)
+
+    for index, article in webhose.iterrows():
+        logging('{0:4d}/{1:4d}'.format(index + 1, size))
+        ticker = article['ticker']
+        published_time = article['published_time']
+
+        date_str = published_time.strftime('%Y%m%d')
+        start_time = datetime.datetime.strptime('{0:s} 0930'.format(date_str), '%Y%m%d %H%M')
+        end_time = datetime.datetime.strptime('{0:s} 1600'.format(date_str), '%Y%m%d %H%M')
+
+        yesterday = published_time - one_day
+        tomorrow = published_time + one_day
+
+        price_json = find_day_price(ticker, published_time)
+        if price_json is None:
+            continue
+
+        if published_time >= start_time and published_time <= end_time:
+            price = price_json['open']
+            predicted_price = price_json['close']
+            predicted_time = end_time
+
+        elif published_time < start_time:
+            yesterday_price_json = find_day_price(ticker, yesterday)
+            if yesterday_price_json is None:
+                continue
+
+            price = yesterday_price_json['close']
+            predicted_price = price_json['open']
+            predicted_time = start_time
+
+        else:
+            tomorrow_price_json = find_day_price(ticker, tomorrow)
+            if tomorrow_price_json is None:
+                continue
+
+            price = price_json['close']
+            predicted_price = tomorrow_price_json['open']
+            predicted_time = start_time + one_day
+
+        datum = pd.Series(
+            data={
+                'text':clean_sentence(article['text']),
+                'published_time':published_time,
+                'predicted_time':predicted_time,
+                'price':price,
+                'predicted_price':predicted_price,
+                'ticker':article['ticker'],
+                'name':article['name'],
+                'title':article['title'],
+                'country':article['country'],
+                'site':article['site']
+            }
+        )
+        df = df.append(datum, ignore_index=True)
+    df.to_csv('webhose_price_trend.csv', index=False)
+    ipdb.set_trace()
 
 if __name__ == '__main__':
-    collect_webhose_news()
+    generate_webhose_price_trend()

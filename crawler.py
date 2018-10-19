@@ -60,6 +60,13 @@ def crawl_IEX_price(ticker, dir_path):
 
         date = date + one_day
 
+def crawl_IEX_5y_price(ticker, dir_path):
+    url = "https://api.iextrading.com/1.0/stock/{0:s}/chart/5y".format(ticker.lower())
+    result = requests.get(url)
+    if len(result.json()) > 0:
+        file_name = "{0:s}.json".format(ticker)
+        pickle.dump(result.json(), open(dir_path + "/price_5y/" + file_name, "wb"))
+
 def crawl_reuters(dir_path):
     date = datetime.datetime.strptime('20180703', '%Y%m%d')
     end_date = datetime.datetime.today()
@@ -130,11 +137,12 @@ def crawl_IEX():
             os.mkdir(dir_path + "/doc")
             os.mkdir(dir_path + "/price")
 
-        crawl_IEX_news(ticker, dir_path)
-        crawl_IEX_price(ticker, dir_path)
+        #crawl_IEX_news(ticker, dir_path)
+        #crawl_IEX_price(ticker, dir_path)
+        crawl_IEX_5y_price(ticker, 'data/')
 
 def main():
-    #crawl_IEX()
+    crawl_IEX()
     #crawl_reuters("data/reuters")
 
 
