@@ -42,7 +42,15 @@ def plot_news_per_day(df, title, fname):
     non_trading_group = non_trading.groupby(non_trading['datetime'].apply(lambda x: map_trading_date(x)))
     non_trading_day_news = non_trading_group.count()['datetime'].rename('close')
 
-    day_news = pd.concat([trading_day_news, non_trading_day_news], axis=1, sort=True).dropna()
+    data = []
+    if len(trading_day_news) > 0:
+        data.append(trading_day_news)
+    if len(non_trading_day_news) > 0:
+        data.append(non_trading_day_news)
+    if len(data) == 0:
+        return
+
+    day_news = pd.concat(data, axis=1, sort=True).dropna()
     day_news.index = pd.to_datetime(day_news.index)
 
     rcParams.update({'figure.autolayout': True})
@@ -96,6 +104,19 @@ def plot_webhose_500():
 
     plot_news_per_day(df, 'News per day', 'picture/webhose_500_news_per_day.png')
 
+def plot_webhose_price_trend():
+    df = pd.read_csv('webhose_price_trend.csv')
+
+    plot_freq_hist(
+        data=df['ticker'].value_counts()[:20],
+        title='Top 20 Webhose 500 price article ticker',
+        xlabel='Ticker',
+        fname='picture/webhose_500_price_ticker.png'
+    )
+
+    plot_news_per_day(df, 'News per day', 'picture/webhose_500_price_news_per_day.png')
+
+
 def plot_reuters():
     df = pd.read_csv('data/reuter_data.csv')
 
@@ -108,7 +129,18 @@ def plot_reuters():
 
     plot_news_per_day(df, 'News per day', 'picture/reuter_news_per_day.png')
 
+def plot_reuters_price():
+    df = pd.read_csv('data/reuter_price.csv')
+
+    plot_freq_hist(
+        data=df['ticker'].value_counts()[:20],
+        title='Top 20 Reuters price article ticker',
+        xlabel='Ticker',
+        fname='picture/reuter_price_ticker.png'
+    )
+
+    plot_news_per_day(df, 'News per day', 'picture/reuter_price_news_per_day.png')
 
 if __name__ == '__main__':
-    plot_webhose_500()
+    plot_reuters_price()
 
