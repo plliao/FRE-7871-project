@@ -104,7 +104,71 @@ def generate_news_label():
     return df
 
 
+def label_webhose_data():
+    webhose = pd.read_csv('webhose_data.csv')
+    webhose['published_time'] = pd.to_datetime(webhose['published_time'])
+    webhose.sort_values('published_time', inplace=True)
+
+    snp = pd.read_csv('data/constituents.csv')
+
+    df = pd.DataFrame()
+    total_articles = len(webhose)
+
+    for index, item in webhose.iterrows():
+        #logging('{0:d}/{1:d}'.format(index + 1, total_articles))
+
+        published_time = pd.to_datetime(item['published_time'])
+        title = item['title']
+        text = item['text']
+        date_str = published_time.strftime('%Y%m%d')
+        country = item['country']
+        site = item['site']
+
+        cleaned_title = re.sub(r'[^\w\s]', '', title)
+        cleaned_title = re.sub(r' +', ' ', cleaned_title)
+
+        for ticker, name in zip(snp['Symbol'], snp['Name']):
+            cleaned_name = clean_company_name(name)
+            name_pattern = '{0:s}\W'.format(cleaned_name)
+
+            add_datum = False
+            if cleaned_name != 'CA' and cleaned_name != 'News':
+                if '*' in cleaned_name:
+                    name_pattern = re.sub('\\*', '\\\\*', name_pattern)
+                if '.' in cleaned_name:
+                    name_pattern = re.sub('\\.', '\\\\.', name_pattern)
+
+                if re.search(name_pattern, title) is not None or \
+                        re.search(name_pattern, title) is not None:
+                    add_datum = True
+
+            if cleaned_name == 'News':
+                if name in text:
+                    add_datum = True
+
+            if (ticker == 'GOOGL' or ticker == 'GOOG') and 'Google' in text:
+                add_datum = True
+
+            if add_datum:
+                sys.stdout.write('{0:s}: {1:s}, {2:s}, {3:s}\n'.format(date_str, cleaned_title, ticker, cleaned_name))
+                sys.stdout.write('\t{0:s}\n'.format(re.sub('\n', '', text)))
+                sys.stdout.flush()
+
+                datum = pd.Series(
+                    data={
+                        'published_time':published_time,
+                        'title':title,
+                        'text':text,
+                        'ticker':ticker,
+                        'name':name,
+                        'country':country,
+                        'site':site
+                    }
+                )
+                df = df.append(datum, ignore_index=True)
+    return df
+
+
 if __name__ == '__main__':
-    df = generate_news_label()
-    df.to_csv('reuter_data.csv', index=False)
-    ipdb.set_trace()
+    df = label_webhose_data()
+    df.to_csv('webhose_label.csv', index=False)
