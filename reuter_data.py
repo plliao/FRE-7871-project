@@ -119,7 +119,8 @@ def label_webhose_data():
 
         published_time = pd.to_datetime(item['published_time'])
         title = item['title']
-        text = item['text']
+        text = re.sub('Google Plus', '', item['text'])
+        text = re.sub('Google\+', '', text)
         date_str = published_time.strftime('%Y%m%d')
         country = item['country']
         site = item['site']

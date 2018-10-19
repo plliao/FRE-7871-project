@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 
 def plot_freq_hist(data, title, xlabel, fname):
     rcParams.update({'figure.autolayout': True})
+    plt.cla()
     ax = data.plot(kind='bar', title=title)
     ax.set(xlabel=xlabel, ylabel='Frequency')
     plt.savefig(fname)
-    ipdb.set_trace()
 
 def is_in_trading_time(published_time):
     date_str = published_time.strftime('%Y%m%d')
@@ -46,6 +46,7 @@ def plot_news_per_day(df, title, fname):
     day_news.index = pd.to_datetime(day_news.index)
 
     rcParams.update({'figure.autolayout': True})
+    plt.cla()
     ax = day_news.plot(kind='line', title=title, legend=True)
     ax.set(xlabel='Date', ylabel='Frequency')
     plt.savefig(fname)
