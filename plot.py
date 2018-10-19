@@ -10,6 +10,7 @@ def plot_freq_hist(data, title, xlabel, fname):
     ax = data.plot(kind='bar', title=title)
     ax.set(xlabel=xlabel, ylabel='Frequency')
     plt.savefig(fname)
+    ipdb.set_trace()
 
 def is_in_trading_time(published_time):
     date_str = published_time.strftime('%Y%m%d')
@@ -68,11 +69,37 @@ def plot_webhose():
 
     plot_news_per_day(df, 'News per day', 'picture/webhose_news_per_day.png')
 
+def plot_webhose_500():
+    df = pd.read_csv('webhose_label.csv')
+
+    plot_freq_hist(
+        data=df['site'].value_counts()[:20],
+        title='Top 20 Webhose 500 source site',
+        xlabel='Site name',
+        fname='picture/webhose_500_site.png'
+    )
+
+    plot_freq_hist(
+        data=df['country'].value_counts(),
+        title='Webhose 500 source country',
+        xlabel='Country',
+        fname='picture/webhose_500_country.png'
+    )
+
+    plot_freq_hist(
+        data=df['ticker'].value_counts()[:20],
+        title='Top 20 Webhose 500 article ticker',
+        xlabel='Ticker',
+        fname='picture/webhose_500_ticker.png'
+    )
+
+    plot_news_per_day(df, 'News per day', 'picture/webhose_500_news_per_day.png')
+
 def plot_reuters():
     df = pd.read_csv('data/reuter_data.csv')
 
     plot_freq_hist(
-            data=df['ticker'].value_counts()[:20],
+        data=df['ticker'].value_counts()[:20],
         title='Top 20 Reuters article ticker',
         xlabel='Ticker',
         fname='picture/reuter_ticker.png'
@@ -82,6 +109,5 @@ def plot_reuters():
 
 
 if __name__ == '__main__':
-    df = pd.read_csv('data/reuter_data.csv')
-    plot_news_per_day(df, 'News per day', 'picture/reuter_news_per_day.png')
+    plot_webhose_500()
 
