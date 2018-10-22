@@ -136,8 +136,8 @@ def generate_reuter_price():
                     'text':clean_sentence(article['text']),
                     'published_time':published_time,
                     'predicted_time':predicted_time,
-                    'price':price['high'],
-                    'predicted_price':price['low'],
+                    'price':price['marketHigh'],
+                    'predicted_price':predicted_price['marketLow'],
                     'ticker':article['ticker'],
                     'name':article['name'],
                     'title':article['title']
@@ -173,11 +173,9 @@ def find_day_price(ticker, timestamp):
         if guess_time == target_time:
             return data[offset]
         elif guess_time > target_time:
-            #print('guess: {0:s}, target: {1:s}'.format(str(guess_time), str(target_time)))
             offset -= 1
             higher = True
         else:
-            #print('guess: {0:s}, target: {1:s}'.format(str(guess_time), str(target_time)))
             offset += 1
             lower = True
 
@@ -252,4 +250,4 @@ def generate_webhose_price_trend():
     ipdb.set_trace()
 
 if __name__ == '__main__':
-    generate_webhose_price_trend()
+    generate_reuter_price()
