@@ -1,6 +1,7 @@
 import re
 import string
 import ipdb
+import pickle
 
 from matplotlib import rcParams
 import matplotlib.pyplot as plt
@@ -19,10 +20,18 @@ from sklearn.preprocessing import normalize
 from sklearn.preprocessing import RobustScaler
 from sklearn import linear_model
 from wordcloud import WordCloud
+from nltk import pos_tag, word_tokenize
 
-MIN_DF = 10
-MAX_DF = 100
+MIN_DF = 5
+MAX_DF = 50
 WORD_CLOUD_NUMBER = 50
+
+def select_by_pos_tag(sentence, tags):
+    word_tokens = word_tokenize(sentence)
+    tagged_word_token = pos_tag(word_tokens)
+
+    selected_words = [word for word, tag in tagged_word_token if tag in tags]
+    return ' '.join(selected_words)
 
 def clean_sentence(s):
     s = re.sub("\n", " ", s)
@@ -41,8 +50,7 @@ def generate_bag_of_words(news_df, start_index, split_index, end_index, stopword
     test_bag_of_words = vectorizer.transform(test['text'].apply(clean_sentence)).toarray()
 
     word_list = vectorizer.get_feature_names()
-    print("word size", len(word_list))
-    #print(word_list)
+    print('word size:', len(word_list))
 
     train_text_df = pd.DataFrame(train_bag_of_words, index=train.index, columns=word_list)
     test_text_df = pd.DataFrame(test_bag_of_words, index=test.index, columns=word_list)
@@ -96,6 +104,8 @@ def run(data, split, stopwords, exp_label):
             'test':pd.DataFrame()
         },
         'buy_actions':{
+        },
+        'words':{
         }
     }
 
@@ -213,6 +223,11 @@ def run(data, split, stopwords, exp_label):
         record['pnl']['train'] = record['pnl']['train'].append(pd.Series(data=train_pnl_err), ignore_index=True)
         record['pnl']['test'] = record['pnl']['test'].append(pd.Series(data=test_pnl_err), ignore_index=True)
 
+        '''
+        if str(fold_index) not in record['words']:
+            record['words'][str(fold_index)] = []
+        record['words'][str(fold_index)].append(len(vectorizer.get_feature_names()))
+
         # Words analysis
         if fold_index == split:
             plot_word_coef_in_model_dict(classifiers_dict, vectorizer, exp_label)
@@ -220,6 +235,7 @@ def run(data, split, stopwords, exp_label):
 
             bayes_result = analysis_bay(X_train, y_class_train, ['negative', 'positive'], vectorizer)
             plot_word_analysis_result(bayes_result, 'bayes', exp_label)
+        '''
     return record
 
 def plot_word_coef_in_model_dict(model_dict, vectorizer, exp_label):
@@ -282,7 +298,7 @@ def analysis(clf_coef, vectorizer):
             result['negative'][negative_term] = -negative_weight
     return result
 
-def plot_record(record, label):
+def plot_record(record, label, selected_tasks):
     measure_map = {
         'classification':'Accuracy',
         'regression':'MSE',
@@ -291,7 +307,7 @@ def plot_record(record, label):
 
     rcParams.update({'figure.autolayout': True})
     for task, item in record.items():
-        if task != 'buy_actions':
+        if task in selected_tasks:
             for sample, dataframe in item.items():
                 label_filename = re.sub(' +', '_', label)
                 title = '{0:s} task on {1:s} dataset {2:s}'.format(task, sample, label)
@@ -301,32 +317,86 @@ def plot_record(record, label):
                 ax.set(xlabel='Fold number', ylabel=measure_map[task])
                 plt.savefig(path)
 
+def do_exp(data, num_split, stopwords, data_label, feature_label):
+    if stopwords is None:
+        exp_label = "with stopwords ({0:s}, {1:s})".format(data_label, feature_label)
+    else:
+        exp_label = "without stopwords ({0:s}, {1:s})".format(data_label, feature_label)
+    print(exp_label)
+
+    selected_tasks = ['classification', 'regression', 'pnl']
+
+    file_name_label = re.sub(' +', '_', exp_label)
+    record = run(data, num_split, stopwords, exp_label)
+    #plot_record(record, exp_label, selected_tasks)
+    #pickle.dump(record, open('result/record_{0:s}.p'.format(file_name_label), 'wb'))
+    return record
+
+def plot_records(records, model):
+    task_list = ['classification', 'regression', 'pnl']
+    merged_record = {}
+    for task in task_list:
+        train_record_list = []
+        test_record_list = []
+
+        for feature_label, record in records.items():
+            if model in record[task]['train']:
+                train_record_list.append(record[task]['train'][model].rename(feature_label))
+                test_record_list.append(record[task]['train'][model].rename(feature_label))
+
+        if len(train_record_list) > 0:
+            merged_record[task] = {}
+            merged_record[task]['train'] = pd.concat(train_record_list, axis=1)
+            merged_record[task]['test'] = pd.concat(test_record_list, axis=1)
+
+    model_file_name = re.sub(' +', '_', model.lower())
+    plot_record(merged_record, 'comparison_{0:s}'.format(model_file_name), task_list)
 
 def main():
-    news_df = pd.read_csv('webhose_price_trend.csv')
-    data_label = '(webhose)'
-    #news_df = pd.read_csv('data/reuter_price.csv')
-    #data_label = '(reuter)'
+    #news_df = pd.read_csv('webhose_price_trend.csv')
+    #data_label = 'webhose'
+    news_df = pd.read_csv('data/reuter_price.csv')
+    data_label = 'reuter'
 
     null_text_index = news_df[news_df['text'].isnull()].index
     news_df.drop(null_text_index, inplace=True)
     news_df['published_time'] = pd.to_datetime(news_df['published_time'])
     news_df.sort_values('published_time', inplace=True)
     news_df = news_df.reset_index()
-    #print("Price feature")
-    #run(news_df, snp_df, 5, None, False)
 
-    num_split = 10
-    exp_label = "with stopwords {0:s}".format(data_label)
-    print(exp_label)
-    record = run(news_df, num_split, None, exp_label)
-    plot_record(record, exp_label)
+    raw_text = news_df['text'].copy()
 
-    exp_label = "without stopwords {0:s}".format(data_label)
-    print(exp_label)
-    record = run(news_df, num_split, "english", exp_label)
-    plot_record(record, exp_label)
+    records = {}
 
+    num_split = 5
+
+    feature_label = "BOW"
+    records['stopwords'] = do_exp(news_df, num_split, None, data_label, feature_label)
+    records[feature_label] = do_exp(news_df, num_split, "english", data_label, feature_label)
+
+    tags = ['NNP', 'NNPS']
+    feature_label = "BOW proper noun"
+    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
+    records[feature_label] = do_exp(news_df, num_split, "english", data_label, feature_label)
+
+    tags = ['NNP', 'NNPS', 'NN', 'NNS']
+    feature_label = "BOW noun"
+    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
+    records[feature_label] = do_exp(news_df, num_split, "english", data_label, feature_label)
+
+    tags = ['NNP', 'NNPS', 'NN', 'NNS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']
+    feature_label = "BOW noun and verb"
+    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
+    records[feature_label] = do_exp(news_df, num_split, "english", data_label, feature_label)
+
+    tags = ['NNP', 'NNPS', 'NN', 'NNS', 'JJ', 'JJR', 'JJS']
+    feature_label = "BOW noun and adj"
+    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
+    records[feature_label] = do_exp(news_df, num_split, "english", data_label, feature_label)
+
+    plot_records(records, 'Ridge Regression')
+    #plot_records(records, 'Logistic Regression')
+    #plot_records(records, 'SVR')
 
 if __name__ == '__main__':
     main()
