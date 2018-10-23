@@ -1,4 +1,5 @@
 import re
+import os
 import string
 import ipdb
 import pickle
@@ -43,6 +44,7 @@ def select_by_pos_tag(sentence, tags):
 def clean_sentence(s):
     s = re.sub("\n", " ", s)
     s = re.sub("[" + string.punctuation + "]", " ", s)
+    s = re.sub("\?", " ", s)
     s = re.sub("[0-9]+", " ", s)
     s = re.sub(" +", " ", s)
     return s.strip()
@@ -83,9 +85,13 @@ def average_word2vec(sentence, model):
     return pd.Series(np.average(word2vecs, axis=0))
 
 def generate_word2vec(train, test, feature_args):
-    model = feature_args['model']
-    features = pd.concat([train, test], axis=0)['text'].apply(average_word2vec, model=model)
-    return features, None
+    path = 'word2vec/' + feature_args['model']
+    word2vec = pd.read_csv(path)
+    return word2vec[train.index[0]:test.index[-1] + 1], None
+
+def generate_skip_thoughts(train, test, feature_args):
+    skip_thoughts = pd.read_csv(feature_args['path'])
+    return skip_thoughts[train.index[0]:test.index[-1] + 1], None
 
 def generate_price_features(data):
     price_feature_name = ['previous_price_{0:d}'.format(d) for d in range(1, 6)]
@@ -135,7 +141,7 @@ def run(data, split, feature_args, exp_label):
         },
         'buy_actions':{
         },
-        'words':{
+        'feature_size':{
         }
     }
 
@@ -144,7 +150,7 @@ def run(data, split, feature_args, exp_label):
         BOW:generate_bag_of_words,
         TFIDF:generate_tfidf,
         WORD2VEC:generate_word2vec,
-        SKIPTHOUGHT:None
+        SKIPTHOUGHT:generate_skip_thoughts
     }
 
     fold_index = 0
@@ -272,20 +278,15 @@ def run(data, split, feature_args, exp_label):
         record['regression']['test'] = record['regression']['test'].append(pd.Series(data=test_regre_err), ignore_index=True)
         record['pnl']['train'] = record['pnl']['train'].append(pd.Series(data=train_pnl_err), ignore_index=True)
         record['pnl']['test'] = record['pnl']['test'].append(pd.Series(data=test_pnl_err), ignore_index=True)
-
-        '''
-        if str(fold_index) not in record['words']:
-            record['words'][str(fold_index)] = []
-        record['words'][str(fold_index)].append(len(vectorizer.get_feature_names()))
+        record['feature_size'][str(fold_index)] = feature_size
 
         # Words analysis
-        if fold_index == split:
+        if vectorizer is not None and fold_index == split:
             plot_word_coef_in_model_dict(classifiers_dict, vectorizer, exp_label)
             plot_word_coef_in_model_dict(regressors_dict, vectorizer, exp_label)
 
             bayes_result = analysis_bay(X_train, y_class_train, ['negative', 'positive'], vectorizer)
             plot_word_analysis_result(bayes_result, 'bayes', exp_label)
-        '''
     return record
 
 def plot_word_coef_in_model_dict(model_dict, vectorizer, exp_label):
@@ -317,14 +318,17 @@ def analysis_bay(X, y, class_labels, vectorizer):
     clf = MultinomialNB()
     clf.fit(X, y)
 
+    word_list = vectorizer.get_feature_names()
+
     result = {}
     for class_index, class_prob_array in enumerate(clf.feature_log_prob_):
         result[class_labels[class_index]] = {}
         maximum_prob_index = class_prob_array.argsort()[-WORD_CLOUD_NUMBER:][::-1]
 
         for index in maximum_prob_index:
-            word = vectorizer.get_feature_names()[index]
-            result[class_labels[class_index]][word] = class_prob_array[index]
+            if index < len(word_list):
+                word = word_list[index]
+                result[class_labels[class_index]][word] = class_prob_array[index]
     return result
 
 def analysis(clf_coef, vectorizer):
@@ -335,16 +339,17 @@ def analysis(clf_coef, vectorizer):
     maximum_weight_index = clf_coef.argsort()[-WORD_CLOUD_NUMBER:][::-1]
     minimum_weight_index = clf_coef.argsort()[:WORD_CLOUD_NUMBER]
 
+    word_list = vectorizer.get_feature_names()
     for positive_index, negative_index in zip(maximum_weight_index, minimum_weight_index):
         positive_weight = clf_coef[positive_index]
         negative_weight = clf_coef[negative_index]
 
-        if positive_weight > 0:
-            positive_term = vectorizer.get_feature_names()[positive_index]
+        if positive_weight > 0 and positive_index < len(word_list):
+            positive_term = word_list[positive_index]
             result['positive'][positive_term] = positive_weight
 
-        if negative_weight < 0:
-            negative_term = vectorizer.get_feature_names()[negative_index]
+        if negative_weight < 0 and negative_index < len(word_list):
+            negative_term = word_list[negative_index]
             result['negative'][negative_term] = -negative_weight
     return result
 
@@ -367,23 +372,26 @@ def plot_record(record, label, selected_tasks):
                 ax.set(xlabel='Fold number', ylabel=measure_map[task])
                 plt.savefig(path)
 
-def do_exp(data, num_split, feature_args, data_label, feature_label):
-    if feature_args['stop_words'] is None:
-        exp_label = "with stop_words ({0:s}, {1:s})".format(data_label, feature_label)
-    else:
-        exp_label = "without stop_words ({0:s}, {1:s})".format(data_label, feature_label)
+def do_exp(data, num_split, feature_args, data_label, feature_label, redo=False):
+    exp_label = "({0:s}, {1:s})".format(data_label, feature_label)
     print(exp_label)
     print(feature_args)
 
+    file_name_label = re.sub(' +', '_', exp_label)
+    record_file_path = 'result/record_{0:s}.p'.format(file_name_label)
+
+    if not redo and os.path.isfile(record_file_path):
+        record = pickle.load(open(record_file_path, 'rb'))
+        return record
+
     selected_tasks = ['classification', 'regression', 'pnl']
 
-    file_name_label = re.sub(' +', '_', exp_label)
     record = run(data, num_split, feature_args, exp_label)
-    #plot_record(record, exp_label, selected_tasks)
-    #pickle.dump(record, open('result/record_{0:s}.p'.format(file_name_label), 'wb'))
+    plot_record(record, exp_label, selected_tasks)
+    pickle.dump(record, open(record_file_path, 'wb'))
     return record
 
-def plot_records(records, model):
+def plot_records(records, model, exp_label):
     task_list = ['classification', 'regression', 'pnl']
     merged_record = {}
     for task in task_list:
@@ -401,7 +409,7 @@ def plot_records(records, model):
             merged_record[task]['test'] = pd.concat(test_record_list, axis=1)
 
     model_file_name = re.sub(' +', '_', model.lower())
-    plot_record(merged_record, 'comparison_{0:s}'.format(model_file_name), task_list)
+    plot_record(merged_record, 'comparison_{0:s}_{1:s}'.format(model_file_name, exp_label), task_list)
 
 def preprocess_news_df(news_df):
     null_text_index = news_df[news_df['text'].isnull()].index
@@ -415,7 +423,9 @@ def main():
     #news_df = pd.read_csv('webhose_price_trend.csv')
     #data_label = 'webhose'
     news_df = pd.read_csv('data/reuter_price.csv')
-    data_label = 'reuter'
+    data_label = 'reuters'
+
+    exp_label = "all"
 
     news_df = preprocess_news_df(news_df)
     raw_text = news_df['text'].copy()
@@ -424,17 +434,16 @@ def main():
 
     num_split = 5
 
-    feature_label = "BOW stop_words"
+    feature_label = "BOW stopwords"
     feature_param = {
-        'stop_words':None,
         BOW:{}
     }
     records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
 
     feature_label = "BOW"
-    feature_param['stop_words'] = "english"
     feature_param[BOW]['stop_words'] = "english"
     records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
+
     '''
     feature_label = "BOW tri-gram"
     feature_param[BOW]['ngram_range'] = (1, 3)
@@ -446,13 +455,11 @@ def main():
     news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
     records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
 
-    '''
     tags = ['NNP', 'NNPS', 'NN', 'NNS']
     feature_label = "BOW noun"
     news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
     records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
 
-    '''
     tags = ['NNP', 'NNPS', 'NN', 'NNS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']
     feature_label = "BOW noun and verb"
     news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
@@ -468,18 +475,34 @@ def main():
     news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
     records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
 
+    tags = ['NNP', 'NNPS', 'NN', 'NNS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'JJ', 'JJR', 'JJS']
+    feature_label = "BOW noun, verb and adj"
+    feature_param = {
+        BOW:{'stop_words':"english"}
+    }
+    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
+
     feature_label = "BOW and TFIDF"
     feature_param[TFIDF] = {
         'stop_words':"english"
     }
     records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
 
-    tags = ['NNP', 'NNPS', 'NN', 'NNS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']
-    feature_label = "BOW, TFIDF noun and verb"
-    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
-    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
-    '''
 
+    feature_label = "BOW, TFIDF, and word2vec google news 300"
+    feature_param[WORD2VEC] = {
+        'model':data_label + "_word2vec-google-news-300.csv"
+    }
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
+
+    feature_label = "BOW, TFIDF, word2vec, and skip_thought bidirectional"
+    feature_param[SKIPTHOUGHT] = {
+        'path':"skip_thoughts_embedding/{0:s}_bi_embedding.csv".format(data_label)
+    }
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
+
+    '''
     feature_label = "TFIDF"
     del feature_param[BOW]
     feature_param[TFIDF] = {
@@ -487,23 +510,35 @@ def main():
     }
     records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
 
-    '''
-    tags = ['NNP', 'NNPS', 'NN', 'NNS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']
-    feature_label = "TFIDF noun and verb"
-    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
-    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
-    '''
-
-    feature_label = "word2vec"
+    feature_label = "word2vec glove wiki 300"
     del feature_param[TFIDF]
     feature_param[WORD2VEC] = {
-        'model':api.load("word2vec-google-news-300")
+        'model':data_label + "_glove-wiki-gigaword-300.csv"
     }
-    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label, redo=True)
 
-    plot_records(records, 'Ridge Regression')
-    #plot_records(records, 'Logistic Regression')
-    #plot_records(records, 'SVR')
+    feature_label = "word2vec google news 300"
+    feature_param[WORD2VEC] = {
+        'model':data_label + "_word2vec-google-news-300.csv"
+    }
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label, redo=True)
+
+    feature_label = "skip_thought unidirectional"
+    del feature_param[WORD2VEC]
+    feature_param[SKIPTHOUGHT] = {
+        'path':"skip_thoughts_embedding/{0:s}_uni_embedding.csv".format(data_label)
+    }
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label, redo=True)
+
+    feature_label = "skip_thought bidirectional"
+    feature_param[SKIPTHOUGHT] = {
+        'path':"skip_thoughts_embedding/{0:s}_bi_embedding.csv".format(data_label)
+    }
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label, redo=True)
+
+    plot_records(records, 'Ridge Regression', exp_label)
+    plot_records(records, 'SVR', exp_label)
+    plot_records(records, 'Logistic Regression', exp_label)
 
 if __name__ == '__main__':
     main()
