@@ -85,7 +85,6 @@ def average_word2vec(sentence, model):
 def generate_word2vec(train, test, feature_args):
     model = feature_args['model']
     features = pd.concat([train, test], axis=0)['text'].apply(average_word2vec, model=model)
-    ipdb.set_trace()
     return features, None
 
 def generate_price_features(data):
@@ -404,18 +403,21 @@ def plot_records(records, model):
     model_file_name = re.sub(' +', '_', model.lower())
     plot_record(merged_record, 'comparison_{0:s}'.format(model_file_name), task_list)
 
+def preprocess_news_df(news_df):
+    null_text_index = news_df[news_df['text'].isnull()].index
+    news_df.drop(null_text_index, inplace=True)
+    news_df['published_time'] = pd.to_datetime(news_df['published_time'])
+    news_df.sort_values('published_time', inplace=True)
+    news_df = news_df.reset_index()
+    return news_df
+
 def main():
     #news_df = pd.read_csv('webhose_price_trend.csv')
     #data_label = 'webhose'
     news_df = pd.read_csv('data/reuter_price.csv')
     data_label = 'reuter'
 
-    null_text_index = news_df[news_df['text'].isnull()].index
-    news_df.drop(null_text_index, inplace=True)
-    news_df['published_time'] = pd.to_datetime(news_df['published_time'])
-    news_df.sort_values('published_time', inplace=True)
-    news_df = news_df.reset_index()
-
+    news_df = preprocess_news_df(news_df)
     raw_text = news_df['text'].copy()
 
     records = {}
