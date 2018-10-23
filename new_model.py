@@ -4,6 +4,8 @@ import string
 import ipdb
 import pickle
 
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import rcParams
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,8 +27,8 @@ from wordcloud import WordCloud
 from nltk import pos_tag, word_tokenize
 import gensim.downloader as api
 
-MIN_DF = 5
-MAX_DF = 50
+MIN_DF = 10
+MAX_DF = 100
 WORD_CLOUD_NUMBER = 50
 
 BOW = "bow"
@@ -419,20 +421,9 @@ def preprocess_news_df(news_df):
     news_df = news_df.reset_index()
     return news_df
 
-def main():
-    #news_df = pd.read_csv('webhose_price_trend.csv')
-    #data_label = 'webhose'
-    news_df = pd.read_csv('data/reuter_price.csv')
-    data_label = 'reuters'
-
-    exp_label = "all"
-
-    news_df = preprocess_news_df(news_df)
-    raw_text = news_df['text'].copy()
-
+def do_all(news_df, raw_text, num_split, data_label):
+    exp_label = data_label + "_" + "all"
     records = {}
-
-    num_split = 5
 
     feature_label = "BOW stopwords"
     feature_param = {
@@ -444,65 +435,6 @@ def main():
     feature_param[BOW]['stop_words'] = "english"
     records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
 
-    '''
-    feature_label = "BOW tri-gram"
-    feature_param[BOW]['ngram_range'] = (1, 3)
-    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
-
-    tags = ['NNP', 'NNPS']
-    feature_label = "BOW proper noun"
-    del feature_param[BOW]['ngram_range']
-    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
-    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
-
-    tags = ['NNP', 'NNPS', 'NN', 'NNS']
-    feature_label = "BOW noun"
-    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
-    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
-
-    tags = ['NNP', 'NNPS', 'NN', 'NNS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']
-    feature_label = "BOW noun and verb"
-    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
-    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
-
-    tags = ['NNP', 'NNPS', 'NN', 'NNS', 'JJ', 'JJR', 'JJS']
-    feature_label = "BOW noun and adj"
-    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
-    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
-
-    tags = ['NNP', 'NNPS', 'NN', 'NNS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'JJ', 'JJR', 'JJS']
-    feature_label = "BOW noun, verb and adj"
-    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
-    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
-
-    tags = ['NNP', 'NNPS', 'NN', 'NNS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'JJ', 'JJR', 'JJS']
-    feature_label = "BOW noun, verb and adj"
-    feature_param = {
-        BOW:{'stop_words':"english"}
-    }
-    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
-    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
-
-    feature_label = "BOW and TFIDF"
-    feature_param[TFIDF] = {
-        'stop_words':"english"
-    }
-    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
-
-
-    feature_label = "BOW, TFIDF, and word2vec google news 300"
-    feature_param[WORD2VEC] = {
-        'model':data_label + "_word2vec-google-news-300.csv"
-    }
-    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
-
-    feature_label = "BOW, TFIDF, word2vec, and skip_thought bidirectional"
-    feature_param[SKIPTHOUGHT] = {
-        'path':"skip_thoughts_embedding/{0:s}_bi_embedding.csv".format(data_label)
-    }
-    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
-
-    '''
     feature_label = "TFIDF"
     del feature_param[BOW]
     feature_param[TFIDF] = {
@@ -535,6 +467,99 @@ def main():
         'path':"skip_thoughts_embedding/{0:s}_bi_embedding.csv".format(data_label)
     }
     records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label, redo=True)
+    return records, exp_label
+
+def do_add(news_df, raw_text, num_split, data_label):
+    exp_label = data_label + "_" + "add"
+    records = {}
+
+    tags = ['NNP', 'NNPS', 'NN', 'NNS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'JJ', 'JJR', 'JJS']
+    feature_label = "BOW noun, verb and adj"
+    feature_param = {
+        BOW:{'stop_words':"english"}
+    }
+    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
+
+    feature_label = "BOW and TFIDF"
+    feature_param[TFIDF] = {
+        'stop_words':"english"
+    }
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
+
+
+    feature_label = "BOW, TFIDF, and word2vec google news 300"
+    feature_param[WORD2VEC] = {
+        'model':data_label + "_word2vec-google-news-300.csv"
+    }
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
+
+    feature_label = "BOW, TFIDF, word2vec, and skip_thought bidirectional"
+    feature_param[SKIPTHOUGHT] = {
+        'path':"skip_thoughts_embedding/{0:s}_bi_embedding.csv".format(data_label)
+    }
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
+    return records, exp_label
+
+def do_pos_tag(news_df, raw_text, num_split, data_label):
+    exp_label = data_label + "_" + "pos_tag"
+    records = {}
+
+    feature_label = "BOW stopwords"
+    feature_param = {
+        BOW:{}
+    }
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
+
+    feature_label = "BOW"
+    feature_param[BOW]['stop_words'] = "english"
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
+
+    feature_label = "BOW tri-gram"
+    feature_param[BOW]['ngram_range'] = (1, 3)
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
+
+    tags = ['NNP', 'NNPS']
+    feature_label = "BOW proper noun"
+    del feature_param[BOW]['ngram_range']
+    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
+
+    tags = ['NNP', 'NNPS', 'NN', 'NNS']
+    feature_label = "BOW noun"
+    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
+
+    tags = ['NNP', 'NNPS', 'NN', 'NNS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']
+    feature_label = "BOW noun and verb"
+    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
+
+    tags = ['NNP', 'NNPS', 'NN', 'NNS', 'JJ', 'JJR', 'JJS']
+    feature_label = "BOW noun and adj"
+    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
+
+    tags = ['NNP', 'NNPS', 'NN', 'NNS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'JJ', 'JJR', 'JJS']
+    feature_label = "BOW noun, verb and adj"
+    news_df['text'] = raw_text.apply(select_by_pos_tag, tags=tags)
+    records[feature_label] = do_exp(news_df, num_split, feature_param, data_label, feature_label)
+    return records, exp_label
+
+def main():
+    news_df = pd.read_csv('data/webhose_price_trend.csv')
+    data_label = 'webhose'
+    #news_df = pd.read_csv('data/reuter_price.csv')
+    #data_label = 'reuters'
+
+    news_df = preprocess_news_df(news_df)
+    raw_text = news_df['text'].copy()
+
+    num_split = 10
+
+    #records, exp_label = do_all(news_df, raw_text, num_split, data_label)
+    #records, exp_label = do_add(news_df, raw_text, num_split, data_label)
+    records, exp_label = do_pos_tag(news_df, raw_text, num_split, data_label)
 
     plot_records(records, 'Ridge Regression', exp_label)
     plot_records(records, 'SVR', exp_label)
